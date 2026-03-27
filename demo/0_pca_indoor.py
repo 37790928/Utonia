@@ -68,7 +68,7 @@ if __name__ == "__main__":
     transform = utonia.transform.default(0.5)
 
     # Load data
-    point = utonia.data.load("sample1")
+    point = utonia.data.load("/home/jovyan/noah-ictmind/xuan/Utonia/demo/sample1.npz")
 
     if args.wo_color:
         point["color"] = np.zeros_like(point["coord"])
@@ -118,7 +118,8 @@ if __name__ == "__main__":
     pcd = o3d.geometry.PointCloud()
     pcd.points = o3d.utility.Vector3dVector(original_coord)
     pcd.colors = o3d.utility.Vector3dVector(original_pca_color.cpu().detach().numpy())
-    o3d.visualization.draw_geometries([pcd])
+    # o3d.visualization.draw_geometries([pcd])
+    print(np.asarray(pcd.points))
     # or
     # o3d.visualization.draw_plotly([pcd])
 

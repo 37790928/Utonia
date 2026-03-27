@@ -26,11 +26,13 @@ This repo provide two ways of installation: **standalone mode** and **package mo
   # cuda: 12.4, pytorch: 2.5.0
 
   # run `unset CUDA_PATH` if you have installed cuda in your local environment
+  cd /path/to/Utonia   # repo root: conda uses requirements-pip.txt next to environment.yml
   conda env create -f environment.yml --verbose
   conda activate utonia
+  bash scripts/install_post_conda_pip.sh
   ```
 
-  *Make sure **FlashAttention** is installed by default.*
+  **PyTorch** is installed by conda (`pytorch` in `environment.yml`). A second pip step is required for **torch-scatter** and **FlashAttention**: their install/build can import `torch`, but `conda env create` runs pip in an isolated build environment where `torch` is not visible, which surfaces as `ModuleNotFoundError: No module named 'torch'` even though conda already installed PyTorch. The helper script uses `pip install --no-build-isolation` so the active env’s PyTorch is used. Skip it only if you do not need `torch_scatter` / FlashAttention (unusual for the demos).
 
 - The **package mode** is recommended for users who want to inject our model into their own codebase. We provide a `setup.py` file for installation. You can install the package by running the following command:
   ```bash
@@ -39,8 +41,8 @@ This repo provide two ways of installation: **standalone mode** and **package mo
   # CUDA_VERSION: cuda version of local environment (e.g., 124), check by running 'nvcc --version'
   # TORCH_VERSION: torch version of local environment (e.g., 2.5.0), check by running 'python -c "import torch; print(torch.__version__)"'
   pip install spconv-cu${CUDA_VERSION}
-  pip install torch-scatter -f https://data.pyg.org/whl/torch-{TORCH_VERSION}+cu${CUDA_VERSION}.html
-  pip install git+https://github.com/Dao-AILab/flash-attention.git
+  pip install --no-build-isolation torch-scatter -f https://data.pyg.org/whl/torch-{TORCH_VERSION}+cu${CUDA_VERSION}.html
+  pip install --no-build-isolation git+https://github.com/Dao-AILab/flash-attention.git
   pip install huggingface_hub timm 
 
   # (optional, or directly copy the utonia folder to your project)

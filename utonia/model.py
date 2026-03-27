@@ -29,7 +29,7 @@ from addict import Dict
 import torch
 import torch.nn as nn
 from torch.nn.init import trunc_normal_
-import spconv.pytorch as spconv
+from .spconv_backend import SubMConv3d
 import torch_scatter
 from timm.layers import DropPath
 
@@ -391,7 +391,7 @@ class Block(PointModule):
         self.pre_norm = pre_norm
 
         self.cpe = PointSequential(
-            spconv.SubMConv3d(
+            SubMConv3d(
                 channels,
                 channels,
                 kernel_size=3,
@@ -831,7 +831,7 @@ class PointTransformerV3(PointModule, PyTorchModelHubMixin):
             trunc_normal_(module.weight, std=0.02)
             if module.bias is not None:
                 nn.init.zeros_(module.bias)
-        elif isinstance(module, spconv.SubMConv3d):
+        elif isinstance(module, SubMConv3d):
             trunc_normal_(module.weight, std=0.02)
             if module.bias is not None:
                 nn.init.zeros_(module.bias)
@@ -847,6 +847,13 @@ class PointTransformerV3(PointModule, PyTorchModelHubMixin):
         if not self.enc_mode:
             point = self.dec(point)
         return point
+
+
+def _strip_module_prefix(state_dict: dict) -> dict:
+    """DDP / DataParallel checkpoints often prefix keys with 'module.'."""
+    if not any(k.startswith("module.") for k in state_dict.keys()):
+        return state_dict
+    return {k[7:] if k.startswith("module.") else k: v for k, v in state_dict.items()}
 
 
 def load(
@@ -883,7 +890,7 @@ def load(
         return ckpt
 
     model = PointTransformerV3(**ckpt["config"])
-    model.load_state_dict(ckpt["state_dict"])
+    model.load_state_dict(_strip_module_prefix(ckpt["state_dict"]))
     n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
     print(f"Model params: {n_parameters / 1e6:.2f}M")
     return model

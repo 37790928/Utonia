@@ -1,0 +1,12 @@
+# Installed by conda env create (see environment.yml).
+#
+# Do NOT list torch-scatter or flash-attn here: their builds import torch, but
+# conda invokes pip with build isolation, so the build env has no torch.
+# Run: bash scripts/install_post_conda_pip.sh
+spconv-cu124
+opencv-python
+camtools
+trimesh
+natsort
+gradio
+einops

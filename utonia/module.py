@@ -23,9 +23,9 @@ Please cite our work if the code is helpful to you.
 
 import sys
 import torch.nn as nn
-import spconv.pytorch as spconv
 from collections import OrderedDict
 
+from .spconv_backend import SparseConvTensor, is_spconv_module
 from .structure import Point
 
 
@@ -85,7 +85,7 @@ class PointSequential(PointModule):
             if isinstance(module, PointModule):
                 input = module(input)
             # Spconv module
-            elif spconv.modules.is_spconv_module(module):
+            elif is_spconv_module(module):
                 if isinstance(input, Point):
                     input.sparse_conv_feat = module(input.sparse_conv_feat)
                     input.feat = input.sparse_conv_feat.features
@@ -99,7 +99,7 @@ class PointSequential(PointModule):
                         input.sparse_conv_feat = input.sparse_conv_feat.replace_feature(
                             input.feat
                         )
-                elif isinstance(input, spconv.SparseConvTensor):
+                elif isinstance(input, SparseConvTensor):
                     if input.indices.shape[0] != 0:
                         input = input.replace_feature(module(input.features))
                 else:

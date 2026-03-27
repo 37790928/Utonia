@@ -21,8 +21,9 @@ Please cite our work if the code is helpful to you.
 
 
 import torch
-import spconv.pytorch as spconv
 from addict import Dict
+
+from .spconv_backend import SparseConvTensor
 
 from .serialization import encode
 from .utils import offset2batch, batch2offset
@@ -125,7 +126,7 @@ class Point(Dict):
         Point Cloud Serialization
 
         Point cloud is sparse, here we use "sparsify" to specifically refer to
-        preparing "spconv.SparseConvTensor" for SpConv.
+        preparing sparse conv tensor (spconv or PyTorch fallback) for CPE SubMConv.
 
         relay on ["grid_coord" or "coord" + "grid_size", "batch", "feat"]
 
@@ -147,7 +148,7 @@ class Point(Dict):
             sparse_shape = torch.add(
                 torch.max(self.grid_coord, dim=0).values, pad
             ).tolist()
-        sparse_conv_feat = spconv.SparseConvTensor(
+        sparse_conv_feat = SparseConvTensor(
             features=self.feat,
             indices=torch.cat(
                 [self.batch.unsqueeze(-1).int(), self.grid_coord.int()], dim=1
